@@ -14,21 +14,21 @@ return new class extends Migration
         Schema::create('pendaftaran_anggota', function (Blueprint $table) {
             $table->id();
             $table->string('nomor_daftar',15)->unique();
-            $table->foreignId('kantor_id');
             $table->foreignId('penginput_id');
-            $table->enum('metode_bayar',['Cash','Transfer'])->nullable();
-            $table->integer('nominal_bayar')->nullable();
-            $table->string('bukti_bayar')->nullable();
-            $table->enum('status',['Proses','Ditolak','Diajukan Ulang','Diterima'])->default('Proses');
-            $table->timestamp('tanggal_daftar')->nullable();
-            $table->timestamp('tanggal_diterima')->nullable();
+            $table->foreignId('kantor_id');
+            $table->enum('status',['Unsubmit','Proses','Ditolak','Diajukan Ulang','Diterima'])->default('Unsubmit');
+            $table->boolean('tahap_satu')->default(false);
+            $table->boolean('tahap_dua')->default(false);
+            $table->boolean('tahap_tiga')->default(false);
             $table->boolean('is_submit')->default(false);
-            $table->boolean('tahap_1')->default(false);
-            $table->boolean('tahap_2')->default(false);
-            $table->boolean('tahap_3')->default(false);
             $table->boolean('approve_admin')->default(false);
             $table->boolean('approve_branch_manager')->default(false);
-            // $table->timestamps();
+            $table->dateTime('tanggal_daftar')->useCurrent();
+            $table->dateTime('tanggal_diterima')->nullable();
+            $table->integer('nominal_bayar_daftar')->nullable();
+            $table->enum('metode_bayar_daftar',['Cash','Transfer'])->nullable();
+            $table->string('bukti_bayar_daftar')->nullable();
+            $table->timestamps();
         });
     }
 

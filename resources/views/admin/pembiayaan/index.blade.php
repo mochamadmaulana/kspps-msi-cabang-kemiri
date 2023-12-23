@@ -5,14 +5,7 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                @if (empty($pendaftaran))
-                <form action="{{ route('admin.anggota.create-pendaftaran') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn btn-sm btn-primary shadow-sm"><i class="fas fa-plus mr-1"></i> Pendaftaran Baru</button>
-                </form>
-                @else
-                <a href="{{ route('admin.anggota.index-pendaftaran',$pendaftaran->nomor_daftar) }}" class="btn btn-sm btn-primary shadow-sm"><i class="fas fa-plus mr-1"></i> Lanjutkan Pendaftaran</a>
-                @endif
+                <a href="{{ route('admin.anggota.create') }}" class="btn btn-sm btn-primary shadow-sm"><i class="fas fa-plus mr-1"></i> Request Pembiayaan</a>
                 @if (request('search'))
                 <div class="float-right">
                     <a href="{{ route('admin.anggota.index') }}" class="btn btn-sm btn-warning"><i class="fas fa-sync-alt mr-1"></i> Refresh</a>
@@ -124,6 +117,7 @@
     </div>
 </div>
 @endsection
+
 @push('breadcrumb')
 <li class="breadcrumb-item active">List Data</li>
 @endpush

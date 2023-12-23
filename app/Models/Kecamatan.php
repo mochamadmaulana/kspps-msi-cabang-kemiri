@@ -18,4 +18,12 @@ class Kecamatan extends Model
     {
         return $this->hasMany(Majlis::class);
     }
+    function identitas_anggota()
+    {
+        return $this->hasOne(IdentitasAnggota::class);
+    }
+    function alamat_anggota()
+    {
+        return $this->hasOne(AlamatAnggota::class);
+    }
 }

@@ -18,6 +18,11 @@ class PendaftaranAnggota extends Model
         return $this->belongsTo(Kantor::class);
     }
 
+    public function majlis()
+    {
+        return $this->belongsTo(Majlis::class);
+    }
+
     public function referensi()
     {
         return $this->belongsTo(User::class,'referensi_id','id');
@@ -30,6 +35,6 @@ class PendaftaranAnggota extends Model
 
     public function anggota()
     {
-        return $this->belongsTo(Anggota::class);
+        return $this->hasOne(Anggota::class);
     }
 }

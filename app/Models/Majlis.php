@@ -53,4 +53,8 @@ class Majlis extends Model
     {
         return $this->belongsTo(Anggota::class,'ketua_id','id');
     }
+    public function pendaftaran_anggota()
+    {
+        return $this->hasMany(PendaftaranAnggota::class);
+    }
 }

@@ -15,9 +15,16 @@ class Provinsi extends Model
     {
         return $this->hasMany(Kota::class);
     }
-
     function kantor()
     {
         return $this->hasOne(Kantor::class);
+    }
+    function identitas_anggota()
+    {
+        return $this->hasOne(IdentitasAnggota::class);
+    }
+    function alamat_anggota()
+    {
+        return $this->hasOne(AlamatAnggota::class);
     }
 }

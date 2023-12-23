@@ -38,6 +38,6 @@ class Anggota extends Model
 
     public function pendaftaran_anggota()
     {
-        return $this->hasOne(PendaftaranAnggota::class);
+        return $this->belongsTo(PendaftaranAnggota::class);
     }
 }

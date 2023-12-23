@@ -15,14 +15,20 @@ class Kota extends Model
     {
         return $this->belongsTo(Provinsi::class);
     }
-
     function karyawan()
     {
         return $this->hasMany(User::class);
     }
-
     function kantor()
     {
         return $this->hasOne(Kantor::class);
+    }
+    function identitas_anggota()
+    {
+        return $this->hasOne(IdentitasAnggota::class);
+    }
+    function alamat_anggota()
+    {
+        return $this->hasOne(AlamatAnggota::class);
     }
 }

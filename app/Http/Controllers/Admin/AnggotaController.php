@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AlamatAnggota;
 use App\Models\Anggota;
-use App\Models\JenisUsaha;
 use App\Models\Kota;
 use App\Models\Majlis;
 use App\Models\PendaftaranAnggota;
 use App\Models\Provinsi;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -22,112 +21,161 @@ class AnggotaController extends Controller
     public function index()
     {
         $anggota = Anggota::with('majlis','pendaftaran_anggota','pendaftaran_anggota.penginput')->where('kantor_id',Auth::user()->kantor_id)->orderBy('id','DESC')->paginate(10)->onEachSide(0)->withQueryString();
-        // $tanggal = HelpAnggota::create_no_pendaftaran(Auth::user()->kantor_id);
         $majlis = Majlis::orderBy('nama')->get();
+        $pendaftaran = PendaftaranAnggota::whereIsSubmit(false)->whereKantorId(Auth::user()->kantor_id)->first();
         return view('admin.anggota.index', [
             'anggota' => $anggota,
             'majlis' => $majlis,
+            'pendaftaran' => $pendaftaran
         ]);
     }
 
-    public function create_step_1(string $tanggal)
+    public function create_pendaftaran()
     {
-        // $jenis_usaha = JenisUsaha::all();
-        // $majlis = Majlis::orderBy('kode')->get();
-        // $tempat_lahir = Kota::orderBy('nama_kota')->get();
-        $kantor_id = Auth::user()->kantor_id;
-        $penginput_id = Auth::user()->id;
-        $rc_pendaftaran = PendaftaranAnggota::whereTanggalDaftar($tanggal)->wherePenginputId($penginput_id)->whereIsSubmit(false)->first() ?? null;
-        if($rc_pendaftaran != null){
-            return view('admin.anggota.tambah-1',[
-                // 'majlis' => $majlis,
-                // 'jenis_usaha' => $jenis_usaha,
-                // 'tempat_lahir' => $tempat_lahir,
-            ]);
-        }else{
-            $no_daftar = HelpAnggota::create_no_pendaftaran($kantor_id);
-            $tanggal_daftar = substr($no_daftar,0,2).'-'.substr($no_daftar,2,2).'-'.substr($no_daftar,4,2).' '.date('H:i:s');
-            $rc_pendaftaran = PendaftaranAnggota::create([
-                'nomor_daftar' => $no_daftar,
-                'kantor_id' => $kantor_id,
-                'penginput_id' => $penginput_id,
-                'tanggal_daftar' => $tanggal_daftar
-            ]);
-            return view('admin.anggota.tambah-1',[
-                // 'majlis' => $majlis,
-                // 'jenis_usaha' => $jenis_usaha,
-                // 'tempat_lahir' => $tempat_lahir,
-            ]);
-        }
+        $nomor_daftar = HelpAnggota::create_no_pendaftaran(Auth::user()->kantor_id);
+        $pendaftaran = PendaftaranAnggota::create([
+            'nomor_daftar' => $nomor_daftar,
+            'penginput_id' => Auth::user()->id,
+            'kantor_id' => Auth::user()->kantor_id,
+        ]);
+        return redirect()->route('admin.anggota.index-pendaftaran',$pendaftaran->nomor_daftar)->with('success','Berhasil membuat nomor pendaftaran');
     }
 
-    public function store_step_1(Request $request)
+    public function index_pendaftaran(String $nomor_daftar)
+    {
+        $pendaftaran = PendaftaranAnggota::whereNomorDaftar($nomor_daftar)->wherePenginputId(Auth::user()->id)->whereIsSubmit(false)->first() ?? null;
+        $anggota = Anggota::wherePendaftaranAnggotaId($pendaftaran->id)->whereKantorId(Auth::user()->kantor_id)->first() ?? null;
+        $alamat_identitas = AlamatAnggota::whereAnggotaId($anggota->id)->first() ?? null;
+        return view('admin.anggota.pendaftaran.index',[
+            'pendaftaran' => $pendaftaran,
+            'anggota' => $anggota,
+            'alamat_identitas' => $alamat_identitas
+        ]);
+    }
+
+    public function input_pendaftaran_tahap_satu(String $nomor_daftar)
+    {
+        $majlis = Majlis::orderBy('kode')->get();
+        $tempat_lahir = Kota::get();
+        return view('admin.anggota.pendaftaran.tahap-1.input',[
+            'nomor_daftar' => $nomor_daftar,
+            'majlis' => $majlis,
+            'tempat_lahir' => $tempat_lahir
+        ]);
+    }
+
+    public function store_pendaftaran_tahap_satu(Request $request, String $nomor_daftar)
     {
         $validator = Validator::make($request->all(), [
             "jenis_keanggotaan" => ["required"],
-            "nama_lengkap" => ["required"],
+            "majlis" => ["required"],
+            "nomor_kartu_keluarga" => ["required","max:20"],
             "jenis_identitas" => ["required"],
-            "no_identitas" => ["required","numeric","unique:anggota,no_identitas"],
-            "no_telepone" => ["required","max:15"],
+            "nomor_identitas" => ["required","numeric","unique:anggota,nomor_identitas"],
+            "nama_lengkap" => ["required","max:100"],
             "tempat_lahir" => ["required"],
             "tanggal_lahir" => ["required"],
             "jenis_kelamin" => ["required"],
-            "pendidikan_terakhir" => ["required"],
+            "email" => ["nullable","email"],
+            "nomor_telepone" => ["required","max:15"],
             "agama" => ["required"],
             "status_pernikahan" => ["required"],
-            "majlis" => ["required"],
+            "pendidikan_terakhir" => ["required"],
             "nama_ibu_kandung" => ["required"],
-            "jenis_usaha" => ["required"],
-            "metode_bayar_pendaftaran" => ["required"],
         ]);
         if ($validator->fails()) {
-            return back()->with('error','Gagal melanjutkan tambah anggota!')->withErrors($validator)->withInput();
+            return back()->with('error','Gagal menyimpan, periksa kembali inputan!')->withErrors($validator)->withInput();
         }
-        $no_pendaftaran = HelpAnggota::create_no_pendaftaran(Auth::user()->kantor_id);
-        $tanggal_daftar = substr($no_pendaftaran,0,2).'-'.substr($no_pendaftaran,2,2).'-'.substr($no_pendaftaran,4,2).' '.date('H:i:s');
-        try {
-            DB::beginTransaction();
-            $anggota = Anggota::create([
-                'kantor_id' => Auth::user()->kantor_id,
-                'jenis_keanggotaan' => $request->jenis_keanggotaan,
-                "nama_lengkap" => $request->nama_lengkap,
-                "jenis_identitas" => $request->jenis_identitas,
-                "no_identitas" => $request->no_identitas,
-                "no_telepone" => $request->no_telepone,
-                "tempat_lahir_id" => $request->tempat_lahir,
-                "tanggal_lahir" => $request->tanggal_lahir,
-                "jenis_kelamin" => $request->jenis_kelamin,
-                "pendidikan_terakhir" => $request->pendidikan_terakhir,
-                "agama" => $request->agama,
-                "status_pernikahan" => $request->status_pernikahan,
-                "majlis_id" => $request->majlis,
-                "nama_ibu_kandung" => $request->nama_ibu_kandung,
-                "jenis_usaha_id" => $request->jenis_usaha,
-                "komoditi_usaha_id" => $request->jenis_usaha,
-            ]);
-            $pendaftaran = PendaftaranAnggota::create([
-                "no_pendaftaran" => $no_pendaftaran,
-                "anggota_id" => $anggota->id,
-                "kantor_id" => $anggota->kantor_id,
-                // "tanggal_daftar" => $tanggal_daftar,
-                "penginput_id" => Auth::user()->id,
-                "metode_bayar_pendaftaran" => $request->metode_bayar_pendaftaran,
-            ]);
-            DB::commit();
-            return redirect()->route('admin.anggota.create-2',$pendaftaran->no_pendaftaran)->with('success','Berhasil menyimpan, silahkan lanjutkan tahap ke-2');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return back()->with('error','Gagal melanjutkan tambah anggota!')->withErrors($validator)->withInput();
-        }
+        $pendaftaran = PendaftaranAnggota::whereNomorDaftar($nomor_daftar)->wherePenginputId(Auth::user()->id)->whereIsSubmit(false)->first();
+        Anggota::create([
+            'kantor_id' => Auth::user()->kantor_id,
+            'pendaftaran_anggota_id' => $pendaftaran->id,
+            "majlis_id" => $request->majlis,
+            'jenis_keanggotaan' => $request->jenis_keanggotaan,
+            "jenis_identitas" => $request->jenis_identitas,
+            "nomor_identitas" => $request->nomor_identitas,
+            "nama_lengkap" => $request->nama_lengkap,
+            "email" => $request->email ?? null,
+            "nomor_telepone" => $request->nomor_telepone,
+            "tempat_lahir_id" => $request->tempat_lahir,
+            "tanggal_lahir" => $request->tanggal_lahir,
+            "jenis_kelamin" => $request->jenis_kelamin,
+            "agama" => $request->agama,
+            "status_pernikahan" => $request->status_pernikahan,
+            "pendidikan_terakhir" => $request->pendidikan_terakhir,
+            "nama_ibu_kandung" => $request->nama_ibu_kandung,
+            "nomor_kartu_keluarga" => $request->nomor_kartu_keluarga,
+        ]);
+        $pendaftaran->update(['tahap_satu' => true]);
+        return redirect()->route('admin.anggota.index-pendaftaran',$nomor_daftar)->with('success','Berhasil menyimpan tahap 1');
     }
 
-    public function create_2(string $no_pendaftaran)
+    public function edit_pendaftaran_tahap_satu(String $nomor_daftar)
+    {
+        $majlis = Majlis::orderBy('kode')->get();
+        $tempat_lahir = Kota::get();
+        $pendaftaran = PendaftaranAnggota::whereNomorDaftar($nomor_daftar)->wherePenginputId(Auth::user()->id)->whereIsSubmit(false)->first();
+        $anggota = Anggota::wherePendaftaranAnggotaId($pendaftaran->id)->first();
+        return view('admin.anggota.pendaftaran.tahap-1.edit',[
+            'pendaftaran' => $pendaftaran,
+            'majlis' => $majlis,
+            'tempat_lahir' => $tempat_lahir,
+            'anggota' => $anggota,
+        ]);
+    }
+
+    public function update_pendaftaran_tahap_satu(Request $request, String $nomor_daftar, String $id_pendaftaran)
+    {
+        $validator = Validator::make($request->all(), [
+            "jenis_keanggotaan" => ["required"],
+            "majlis" => ["required"],
+            "nomor_kartu_keluarga" => ["required","max:20"],
+            "jenis_identitas" => ["required"],
+            "nomor_identitas" => ["required","numeric","unique:anggota,nomor_identitas,".$id_pendaftaran.",pendaftaran_anggota_id"],
+            "nama_lengkap" => ["required","max:100"],
+            "tempat_lahir" => ["required"],
+            "tanggal_lahir" => ["required"],
+            "jenis_kelamin" => ["required"],
+            "email" => ["nullable","email"],
+            "nomor_telepone" => ["required","max:15"],
+            "agama" => ["required"],
+            "status_pernikahan" => ["required"],
+            "pendidikan_terakhir" => ["required"],
+            "nama_ibu_kandung" => ["required"],
+        ]);
+        if ($validator->fails()) {
+            return back()->with('error','Gagal mengupdate, periksa kembali inputan!')->withErrors($validator)->withInput();
+        }
+        Anggota::wherePendaftaranAnggotaId($id_pendaftaran)->update([
+            "majlis_id" => $request->majlis,
+            'jenis_keanggotaan' => $request->jenis_keanggotaan,
+            "jenis_identitas" => $request->jenis_identitas,
+            "nomor_identitas" => $request->nomor_identitas,
+            "nama_lengkap" => $request->nama_lengkap,
+            "email" => $request->email ?? null,
+            "nomor_telepone" => $request->nomor_telepone,
+            "tempat_lahir_id" => $request->tempat_lahir,
+            "tanggal_lahir" => $request->tanggal_lahir,
+            "jenis_kelamin" => $request->jenis_kelamin,
+            "agama" => $request->agama,
+            "status_pernikahan" => $request->status_pernikahan,
+            "pendidikan_terakhir" => $request->pendidikan_terakhir,
+            "nama_ibu_kandung" => $request->nama_ibu_kandung,
+            "nomor_kartu_keluarga" => $request->nomor_kartu_keluarga,
+        ]);
+        return redirect()->route('admin.anggota.index-pendaftaran',$nomor_daftar)->with('success','Berhasil mengupdate tahap 1');
+    }
+
+    public function input_pendaftaran_tahap_dua(String $nomor_daftar)
     {
         $provinsi = Provinsi::orderBy('nama_provinsi')->get();
-        return view('admin.anggota.tambah-2',compact('no_pendaftaran','provinsi'));
+        return view('admin.anggota.pendaftaran.tahap-2.input',[
+            'nomor_daftar' => $nomor_daftar,
+            'provinsi' => $provinsi,
+        ]);
     }
 
-    public function store_2(Request $request ,string $no_pendaftaran)
+    public function store_pendaftaran_tahap_dua(Request $request ,string $nomor_daftar)
     {
         $validator = Validator::make($request->all(), [
             "provinsi" => ["required"],
@@ -139,11 +187,12 @@ class AnggotaController extends Controller
             "alamat" => ["required"],
         ]);
         if ($validator->fails()) {
-            return back()->with('error','Gagal menyimpan tahap 2!')->withErrors($validator)->withInput();
+            return back()->with('error','Gagal menyimpan, periksa kembali inputan!')->withErrors($validator)->withInput();
         }
-        $rc_pendaftaran = PendaftaranAnggota::where('no_pendaftaran',$no_pendaftaran)->first();
-        $anggota = Anggota::findOrFail($rc_pendaftaran->anggota_id);
-        $anggota->update([
+        $pendaftaran = PendaftaranAnggota::whereNomorDaftar($nomor_daftar)->wherePenginputId(Auth::user()->id)->whereIsSubmit(false)->first();
+        $anggota = Anggota::wherePendaftaranAnggotaId($pendaftaran->id)->whereKantorId(Auth::user()->kantor_id)->first();
+        AlamatAnggota::create([
+            'anggota_id' => $anggota->id,
             'provinsi_id' => $request->provinsi,
             'kota_kab_id' => $request->kota_kabupaten,
             'kecamatan_id' => $request->kecamatan,
@@ -152,8 +201,68 @@ class AnggotaController extends Controller
             'rt_rw' => $request->rt_rw,
             'alamat' => $request->alamat,
         ]);
-        return redirect()->route('admin.anggota.create-3',$no_pendaftaran)->with('success','Berhasil menyimpan data tahap 2, silahkan lanjutkan tahap 3');
+        $pendaftaran->update(['tahap_dua'=>true]);
+        return redirect()->route('admin.anggota.index-pendaftaran',$nomor_daftar)->with('success','Berhasil menyimpan tahap 2');
     }
+
+    public function edit_pendaftaran_tahap_dua(String $nomor_daftar)
+    {
+        $provinsi = Provinsi::orderBy('nama_provinsi')->get();
+        $pendaftaran = PendaftaranAnggota::whereNomorDaftar($nomor_daftar)->wherePenginputId(Auth::user()->id)->whereIsSubmit(false)->first();
+        $anggota = Anggota::wherePendaftaranAnggotaId($pendaftaran->id)->whereKantorId(Auth::user()->kantor_id)->first();
+        $alamat_identitas = AlamatAnggota::with('provinsi','kota','kecamatan','kelurahan')->whereAnggotaId($anggota->id)->first();
+        return view('admin.anggota.pendaftaran.tahap-2.edit',[
+            'provinsi' => $provinsi,
+            'nomor_daftar' => $nomor_daftar,
+            'alamat_identitas' => $alamat_identitas,
+        ]);
+    }
+
+    public function update_pendaftaran_tahap_dua(Request $request, string $nomor_daftar, String $id_alamat)
+    {
+        $validator = Validator::make($request->all(), [
+            "kode_pos" => ["required"],
+            "rt_rw" => ["required","max:7"],
+            "alamat" => ["required"],
+        ]);
+        if ($validator->fails()) {
+            return back()->with('error','Gagal mengupdate, periksa kembali inputan!')->withErrors($validator)->withInput();
+        }
+        AlamatAnggota::findOrFail($id_alamat)->update([
+            'kode_pos' => $request->kode_pos,
+            'rt_rw' => $request->rt_rw,
+            'alamat' => $request->alamat,
+        ]);
+        return redirect()->route('admin.anggota.index-pendaftaran',$nomor_daftar)->with('success','Berhasil mengupdate tahap 2');
+    }
+
+    public function update_pendaftaran_alamat_identitas(Request $request, String $id_alamat)
+    {
+        $validator = Validator::make($request->all(), [
+            "provinsi" => ["required"],
+            "kota_kabupaten" => ["required"],
+            "kecamatan" => ["required"],
+            "kelurahan" => ["required"],
+        ]);
+        if ($validator->fails()) {
+            return back()->with('error','Gagal mengupdate, periksa kembali inputan!')->withErrors($validator)->withInput();
+        }
+        AlamatAnggota::findOrFail($id_alamat)->update([
+            'provinsi_id' => $request->provinsi,
+            'kota_kab_id' => $request->kota_kabupaten,
+            'kecamatan_id' => $request->kecamatan,
+            'kelurahan_id' => $request->kelurahan,
+        ]);
+        return back()->with('success','Berhasil mengupdate alamat identitas');
+    }
+
+
+
+
+
+
+
+
 
     public function create_3(string $no_pendaftaran)
     {

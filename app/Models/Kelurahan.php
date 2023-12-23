@@ -14,4 +14,12 @@ class Kelurahan extends Model
     {
         return $this->hasOne(Kantor::class);
     }
+    function identitas_anggota()
+    {
+        return $this->hasOne(IdentitasAnggota::class);
+    }
+    function kelurahan_anggota()
+    {
+        return $this->hasOne(Kelurahan::class);
+    }
 }
