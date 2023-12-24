@@ -169,6 +169,24 @@
                                 @error('nama_ibu_kandung')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                         </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label>Nominal Bayar Daftar <span class="text-danger">* <sup class="font-italic">Rp.50.000</sup></span></label>
+                                <input type="text" name="nominal_bayar_daftar" class="form-control @error('nominal_bayar_daftar') is-invalid @enderror" value="{{ @old('nominal_bayar_daftar',$anggota->pendaftaran_anggota->nominal_bayar_daftar) }}" placeholder="0">
+                                @error('nominal_bayar_daftar')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label>Metode Bayar Daftar <span class="text-danger">*</span></label>
+                                <select name="metode_bayar_daftar" class="form-control @error('metode_bayar_daftar') is-invalid @enderror">
+                                    <option value="">- pilih -</option>
+                                    <option value="Cash" @if (@old('metode_bayar_daftar',$anggota->pendaftaran_anggota->metode_bayar_daftar) == 'Cash') selected @endif>Cash</option>
+                                    <option value="Transfer" @if (@old('metode_bayar_daftar',$anggota->pendaftaran_anggota->metode_bayar_daftar) == 'Transfer') selected @endif>Transfer</option>
+                                </select>
+                                @error('metode_bayar_daftar')<div class="invalid-feedback">{{ $message }}</span></div>@enderror
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="card-footer">

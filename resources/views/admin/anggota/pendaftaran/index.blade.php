@@ -3,11 +3,11 @@
 <div class="row">
     <div class="col-12" id="accordion">
         {{-- Tahap - 1 --}}
-        <div class="card @if(empty($pendaftaran->tahap_satu)) card-secondary @else card-success @endif card-outline">
+        <div class="card">
             <a class="d-block w-100" data-toggle="collapse" href="#collapseOne">
                 <div class="card-header">
-                    <h4 class="card-title w-100">
-                        <i class="fas fa-layer-group mr-1"></i> Tahap ke 1
+                    <h4 class="card-title @if(!empty($pendaftaran->tahap_satu)) text-success @endif w-100">
+                        <i class="fas fa-layer-group mr-1"></i> Tahap ke 1 @if(!empty($pendaftaran->tahap_satu)) <i class="ml-2 text-sm fas fa-check"></i> @endif
                     </h4>
                 </div>
             </a>
@@ -73,7 +73,7 @@
 
                         <div class="col-lg-4">
                             <strong>Nomor Telepone</strong>
-                            <p class="font-italic">{{ $anggota->no_telepone ?? '...' }}</p>
+                            <p class="font-italic">{{ $anggota->nomor_telepone ?? '...' }}</p>
                         </div>
 
                         <div class="col-lg-4">
@@ -95,6 +95,16 @@
                             <strong>Nama Ibu Kandung</strong>
                             <p class="font-italic">{{ $anggota->nama_ibu_kandung ?? '...' }}</p>
                         </div>
+
+                        <div class="col-lg-4">
+                            <strong>Nominal Bayar Daftar</strong>
+                            <p class="font-italic">{{ number_format($anggota->pendaftaran_anggota->nominal_bayar_daftar, 2) ?? '...' }}</p>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <strong>Metode Bayar Daftar</strong>
+                            <p class="font-italic">{{ $anggota->pendaftaran_anggota->metode_bayar_daftar ?? '...' }}</p>
+                        </div>
                     </div>
                 </div>
                 <div class="card-footer">
@@ -108,16 +118,17 @@
         </div>
 
         {{-- Tahap - 2 --}}
-        <div class="card @if(empty($pendaftaran->tahap_dua)) card-secondary @else card-success @endif card-outline">
+        <div class="card">
             <a class="d-block w-100" data-toggle="collapse" href="#collapseTree">
                 <div class="card-header">
-                    <h4 class="card-title w-100">
-                        <i class="fas fa-layer-group mr-1"></i> Tahap ke 2
+                    <h4 class="card-title @if(!empty($pendaftaran->tahap_dua)) text-success @endif w-100">
+                        <i class="fas fa-layer-group mr-1"></i> Tahap ke 2 @if(!empty($pendaftaran->tahap_dua)) <i class="ml-2 text-sm fas fa-check"></i> @endif
                     </h4>
                 </div>
             </a>
-            <div id="collapseTree" class="collapse @if(empty($pendaftaran->tahap_dua)) show @endif" data-parent="#accordion">
+            <div id="collapseTree" class="collapse" data-parent="#accordion">
                 <div class="card-body">
+                    @if (!empty($pendaftaran->tahap_satu))
                     <div class="row">
                         <div class="col-lg-6">
                             <strong>Alamat {{ $anggota->jenis_identitas ?? '' }}</strong>
@@ -154,21 +165,24 @@
                             <p class="font-italic">{{ $alamat_identitas->rt_rw ?? '...' }}</p>
                         </div>
                     </div>
-                </div>
-                <div class="card-footer">
-                    @if (!empty($pendaftaran->tahap_satu))
-                        @if (!empty($pendaftaran->tahap_dua) && !empty($alamat_identitas))
-                        <a href="{{ route('admin.anggota.edit-pendaftaran-tahap-dua',$pendaftaran->nomor_daftar) }}" class="btn btn-sm btn-success"><i class="fas fa-edit mx-1"></i> Edit</a>
-                        @else
-                        <a href="{{ route('admin.anggota.input-pendaftaran-tahap-dua',$pendaftaran->nomor_daftar) }}" class="btn btn-sm btn-primary"><i class="fas fa-pencil-alt mx-1"></i> Input</a>
-                        @endif
+                    @else
+                    <span>Harap lengkapi terlebih dahulu tahap ke - 1</span>
                     @endif
                 </div>
+                @if (!empty($pendaftaran->tahap_satu))
+                    <div class="card-footer">
+                        @if (empty($pendaftaran->tahap_dua))
+                        <a href="{{ route('admin.anggota.input-pendaftaran-tahap-dua',$pendaftaran->nomor_daftar) }}" class="btn btn-sm btn-primary"><i class="fas fa-pencil-alt mx-1"></i> Input</a>
+                        @else
+                        <a href="{{ route('admin.anggota.edit-pendaftaran-tahap-dua',$pendaftaran->nomor_daftar) }}" class="btn btn-sm btn-success"><i class="fas fa-edit mx-1"></i> Edit</a>
+                        @endif
+                    </div>
+                @endif
             </div>
         </div>
 
         {{-- Tahap - 3 --}}
-        <div class="card @if(empty($pendaftaran->tahap_tiga)) card-secondary @else card-success @endif card-outline">
+        <div class="card">
             <a class="d-block w-100" data-toggle="collapse" href="#collapseTwo">
                 <div class="card-header">
                     <h4 class="card-title w-100">
@@ -176,21 +190,21 @@
                     </h4>
                 </div>
             </a>
-            <div id="collapseTwo" class="collapse @if(empty($pendaftaran->tahap_tiga)) show @endif" data-parent="#accordion">
+            <div id="collapseTwo" class="collapse" data-parent="#accordion">
                 <div class="card-body">
                     @if(!empty($pendaftaran->tahap_dua))
                         <div class="row">
                             <label class="col-lg col-form-label">File Identitas {{ $anggota->jenis_identitas }} <span class="text-danger">*<br><sup class="font-italic">jpg, jpeg, png, pdf (max 10240)</sup></span></label>
                             <div class="col-lg-8">
-                                @if ($anggota->foto_identitas != null)
-                                    <a href="{{ asset('storage/image/anggota/'.$anggota->foto_identitas) }}" target="_blank">File Identitas {{ $anggota->jenis_identitas }} <i class="fas fa-eye"></i></a>
-                                    <form action="#" method="POST" class="d-inline ml-2">
+                                @if ($anggota->file_identitas != null)
+                                    <a href="{{ asset('storage/galery-file/anggota/'.$anggota->file_identitas) }}" target="_blank">File Identitas {{ $anggota->jenis_identitas }} <i class="fas fa-eye"></i></a>
+                                    <form action="{{ route('admin.anggota.pendaftaran-destroy-file-identitas',$anggota->id) }}" method="POST" class="d-inline ml-2">
                                         @csrf
                                         @method('delete')
-                                        <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Apakah yakin ingin menghapus file identitas ?')"><i class="fas fa-trash"></i> Hapus</button>
+                                        <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Apakah yakin ingin menghapus file identitas?')"><i class="fas fa-trash"></i> Hapus</button>
                                     </form>
                                 @else
-                                <form action="#" method="POST" enctype="multipart/form-data">
+                                <form action="{{ route('admin.anggota.pendaftaran-upload-file-identitas',$anggota->id) }}" method="POST" enctype="multipart/form-data">
                                     @csrf
                                     <div class="form-group">
                                         <div class="input-group">
@@ -212,26 +226,28 @@
                             <label class="col-lg col-form-label">File Selfie Identitas {{ $anggota->jenis_identitas }} <span class="text-danger">*<br><sup class="font-italic">jpg, jpeg, png, pdf (max 10240)</sup></span></label>
                             <div class="col-lg-8">
                                 <div class="form-group">
-                                    @if ($anggota->foto_selfie_identitas != null)
-                                        <a href="{{ asset('storage/image/anggota/'.$anggota->foto_selfie_identitas) }}" target="_blank">File Selfie Identitas {{ $anggota->jenis_identitas }} <i class="fas fa-eye"></i></a>
-                                        <form action="#" method="POST" class="d-inline ml-2">
+                                    @if ($anggota->file_selfie_identitas != null)
+                                        <a href="{{ asset('storage/galery-file/anggota/'.$anggota->file_selfie_identitas) }}" target="_blank">File Selfie Identitas {{ $anggota->jenis_identitas }} <i class="fas fa-eye"></i></a>
+                                        <form action="{{ route('admin.anggota.pendaftaran-destroy-file-selfie-identitas',$anggota->id) }}" method="POST" class="d-inline ml-2">
                                             @csrf
                                             @method('delete')
-                                            <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Apakah yakin ingin menghapus file selfie identitas ?')"><i class="fas fa-trash"></i> Hapus</button>
+                                            <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Apakah yakin ingin menghapus file selfie identitas?')"><i class="fas fa-trash"></i> Hapus</button>
                                         </form>
                                     @else
-                                    <form action="#" method="POST" enctype="multipart/form-data">
+                                    <form action="{{ route('admin.anggota.pendaftaran-upload-file-selfie-identitas',$anggota->id) }}" method="POST" enctype="multipart/form-data">
                                         @csrf
-                                        <div class="input-group">
-                                            <div class="custom-file">
-                                                <input type="file" name="file_selfie_identitas" class="custom-file-input @error('file_selfie_identitas') is-invalid @enderror" id="selfieIdentitasFile">
-                                                <label class="custom-file-label label-file-selfie-identitas" for="selfieIdentitasFile">Pilih file</label>
+                                        <div class="form-group">
+                                            <div class="input-group">
+                                                <div class="custom-file">
+                                                    <input type="file" name="file_selfie_identitas" class="custom-file-input @error('file_selfie_identitas') is-invalid @enderror" id="selfieIdentitasFile">
+                                                    <label class="custom-file-label label-file-selfie-identitas" for="selfieIdentitasFile">Pilih file</label>
+                                                </div>
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-warning" type="submit"><i class="fas fa-upload mx-1"></i></button>
+                                                </div>
                                             </div>
-                                            <div class="input-group-append">
-                                                <button class="btn btn-warning" type="submit"><i class="fas fa-upload mx-1"></i></button>
-                                            </div>
+                                            @error('file_selfie_identitas')<small class="text-danger">{{ $message }}</small>@enderror
                                         </div>
-                                        @error('file_selfie_identitas')<small class="text-danger">{{ $message }}</small>@enderror
                                     </form>
                                     @endif
                                 </div>
@@ -240,26 +256,28 @@
                         <div class="row">
                             <label class="col-lg col-form-label">File Kartu Keluarga <span class="text-danger">*<br><sup class="font-italic">jpg, jpeg, png, pdf (max 10240)</sup></span></label>
                             <div class="col-lg-8">
-                                @if ($anggota->foto_kartu_keluarga != null)
-                                    <a href="{{ asset('storage/image/anggota/'.$anggota->foto_kartu_keluarga) }}" target="_blank">File Kartu Keluarga <i class="fas fa-eye"></i></a>
-                                    <form action="#" method="POST" class="d-inline ml-2">
+                                @if ($anggota->file_kartu_keluarga != null)
+                                    <a href="{{ asset('storage/image/anggota/'.$anggota->file_kartu_keluarga) }}" target="_blank">File Kartu Keluarga <i class="fas fa-eye"></i></a>
+                                    <form action="{{ route('admin.anggota.pendaftaran-destroy-file-kartu-keluarga',$anggota->id) }}" method="POST" class="d-inline ml-2">
                                         @csrf
                                         @method('delete')
-                                        <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Apakah yakin ingin menghapus file kartu keluarga ?')"><i class="fas fa-trash"></i> Hapus</button>
+                                        <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Apakah yakin ingin menghapus file kartu keluarga?')"><i class="fas fa-trash"></i> Hapus</button>
                                     </form>
                                 @else
-                                <form action="#" method="POST" enctype="multipart/form-data">
+                                <form action="{{ route('admin.anggota.pendaftaran-upload-file-kartu-keluarga',$anggota->id) }}" method="POST" enctype="multipart/form-data">
                                     @csrf
-                                    <div class="input-group mb-3">
-                                        <div class="custom-file">
-                                            <input type="file" name="file_kartu_keluarga" class="custom-file-input @error('file_kartu_keluarga') is-invalid @enderror" id="kartuKeluargaFile">
-                                            <label class="custom-file-label label-file-kartu-keluarga" for="kartuKeluargaFile">Pilih file</label>
+                                    <div class="form-group">
+                                        <div class="input-group">
+                                            <div class="custom-file">
+                                                <input type="file" name="file_kartu_keluarga" class="custom-file-input @error('file_kartu_keluarga') is-invalid @enderror" id="kartuKeluargaFile">
+                                                <label class="custom-file-label label-file-kartu-keluarga" for="kartuKeluargaFile">Pilih file</label>
+                                            </div>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-warning" type="submit"><i class="fas fa-upload mx-1"></i></button>
+                                            </div>
                                         </div>
-                                        <div class="input-group-append">
-                                            <button class="btn btn-warning" type="submit"><i class="fas fa-upload mx-1"></i></button>
-                                        </div>
+                                        @error('file_kartu_keluarga')<small class="text-danger">{{ $message }}</small>@enderror
                                     </div>
-                                    @error('file_kartu_keluarga')<small class="text-danger">{{ $message }}</small>@enderror
                                 </form>
                                 @endif
                             </div>
@@ -269,7 +287,7 @@
                             <div class="col-lg-8">
                                 @if ($anggota->foto_usaha != null)
                                     <a href="{{ asset('storage/image/anggota/'.$anggota->foto_usaha) }}" target="_blank">File Foto Usaha <i class="fas fa-eye"></i></a>
-                                    <form action="#" method="POST" class="d-inline ml-2">
+                                    <form action="{{ route('admin.anggota.pendaftaran-destroy-file-kartu-keluarga',$anggota->id) }}" method="POST" class="d-inline ml-2">
                                         @csrf
                                         @method('delete')
                                         <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Apakah yakin ingin menghapus file foto usaha ?')"><i class="fas fa-trash"></i> Hapus</button>

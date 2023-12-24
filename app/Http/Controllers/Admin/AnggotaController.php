@@ -44,8 +44,8 @@ class AnggotaController extends Controller
     public function index_pendaftaran(String $nomor_daftar)
     {
         $pendaftaran = PendaftaranAnggota::whereNomorDaftar($nomor_daftar)->wherePenginputId(Auth::user()->id)->whereIsSubmit(false)->first() ?? null;
-        $anggota = Anggota::wherePendaftaranAnggotaId($pendaftaran->id)->whereKantorId(Auth::user()->kantor_id)->first() ?? null;
-        $alamat_identitas = AlamatAnggota::whereAnggotaId($anggota->id)->first() ?? null;
+        $anggota = Anggota::with('pendaftaran_anggota')->wherePendaftaranAnggotaId($pendaftaran->id)->whereKantorId(Auth::user()->kantor_id)->first() ?? null;
+        $alamat_identitas = !empty($anggota) ? AlamatAnggota::whereAnggotaId($anggota->id)->first() : null;
         return view('admin.anggota.pendaftaran.index',[
             'pendaftaran' => $pendaftaran,
             'anggota' => $anggota,
@@ -82,6 +82,8 @@ class AnggotaController extends Controller
             "status_pernikahan" => ["required"],
             "pendidikan_terakhir" => ["required"],
             "nama_ibu_kandung" => ["required"],
+            "nominal_bayar_daftar" => ["required","numeric"],
+            "metode_bayar_daftar" => ["required"],
         ]);
         if ($validator->fails()) {
             return back()->with('error','Gagal menyimpan, periksa kembali inputan!')->withErrors($validator)->withInput();
@@ -106,7 +108,11 @@ class AnggotaController extends Controller
             "nama_ibu_kandung" => $request->nama_ibu_kandung,
             "nomor_kartu_keluarga" => $request->nomor_kartu_keluarga,
         ]);
-        $pendaftaran->update(['tahap_satu' => true]);
+        $pendaftaran->update([
+            'tahap_satu' => true,
+            'nominal_bayar_daftar' => $request->nominal_bayar_daftar,
+            'metode_bayar_daftar' => $request->metode_bayar_daftar,
+        ]);
         return redirect()->route('admin.anggota.index-pendaftaran',$nomor_daftar)->with('success','Berhasil menyimpan tahap 1');
     }
 
@@ -115,7 +121,7 @@ class AnggotaController extends Controller
         $majlis = Majlis::orderBy('kode')->get();
         $tempat_lahir = Kota::get();
         $pendaftaran = PendaftaranAnggota::whereNomorDaftar($nomor_daftar)->wherePenginputId(Auth::user()->id)->whereIsSubmit(false)->first();
-        $anggota = Anggota::wherePendaftaranAnggotaId($pendaftaran->id)->first();
+        $anggota = Anggota::with('pendaftaran_anggota')->wherePendaftaranAnggotaId($pendaftaran->id)->whereKantorId(Auth::user()->kantor_id)->first();
         return view('admin.anggota.pendaftaran.tahap-1.edit',[
             'pendaftaran' => $pendaftaran,
             'majlis' => $majlis,
@@ -142,10 +148,13 @@ class AnggotaController extends Controller
             "status_pernikahan" => ["required"],
             "pendidikan_terakhir" => ["required"],
             "nama_ibu_kandung" => ["required"],
+            "nominal_bayar_daftar" => ["required","numeric"],
+            "metode_bayar_daftar" => ["required"],
         ]);
         if ($validator->fails()) {
             return back()->with('error','Gagal mengupdate, periksa kembali inputan!')->withErrors($validator)->withInput();
         }
+        $pendaftaran = PendaftaranAnggota::whereNomorDaftar($nomor_daftar)->wherePenginputId(Auth::user()->id)->whereIsSubmit(false)->first();
         Anggota::wherePendaftaranAnggotaId($id_pendaftaran)->update([
             "majlis_id" => $request->majlis,
             'jenis_keanggotaan' => $request->jenis_keanggotaan,
@@ -162,6 +171,10 @@ class AnggotaController extends Controller
             "pendidikan_terakhir" => $request->pendidikan_terakhir,
             "nama_ibu_kandung" => $request->nama_ibu_kandung,
             "nomor_kartu_keluarga" => $request->nomor_kartu_keluarga,
+        ]);
+        $pendaftaran->update([
+            'nominal_bayar_daftar' => $request->nominal_bayar_daftar,
+            'metode_bayar_daftar' => $request->metode_bayar_daftar,
         ]);
         return redirect()->route('admin.anggota.index-pendaftaran',$nomor_daftar)->with('success','Berhasil mengupdate tahap 1');
     }
@@ -256,9 +269,113 @@ class AnggotaController extends Controller
         return back()->with('success','Berhasil mengupdate alamat identitas');
     }
 
+    public function upload_file_identitas(Request $request, String $id_anggota)
+    {
+        $validator = Validator::make($request->all(), [
+            "file_identitas" => ["required","file","mimes:png,jpg,jpeg,pdf","max:10240"],
+        ]);
+        if ($validator->fails()) {
+            return back()->with('error','Gagal mengupload, periksa kembali inputan!')->withErrors($validator)->withInput();
+        }
+        if($request->hasFile('file_identitas')){
+            $anggota = Anggota::findOrFail($id_anggota);
+            if(!empty($anggota)){
+                $file_upload = $request->file('file_identitas');
+                $hash_name = $file_upload->hashName();
+                $file_upload->storeAs('public/galery-file/anggota/',$hash_name);
+                $anggota->update(['file_identitas' => $hash_name]);
+                return back()->with('success','Berhasil mengupload file identitas');
+            }else{
+                return back()->with('error','Error 500, Gagal mengupload file identitas!');
+            }
+        }else{
+            return back()->with('error','Error 500, Gagal mengupload file identitas!');
+        }
+    }
 
+    public function destroy_file_identitas(String $id_anggota)
+    {
+        $anggota = Anggota::findOrFail($id_anggota);
+        if(!empty($anggota) && !empty(File::exists(public_path('storage/galery-file/anggota/'.$anggota->file_identitas)))){
+            unlink(public_path('storage/galery-file/anggota/'.$anggota->file_identitas));
+            $anggota->update(['file_identitas' => null]);
+            return back()->with('success','Berhasil menghapus file identitas');
+        }else{
+            return back()->with('error','Terdapat kesalahan saat menghapus, silahkan coba kembali!');
+        }
+    }
 
+    public function upload_file_selfie_identitas(Request $request, String $id_anggota)
+    {
+        $validator = Validator::make($request->all(), [
+            "file_selfie_identitas" => ["required","file","mimes:png,jpg,jpeg,pdf","max:10240"],
+        ]);
+        if ($validator->fails()) {
+            return back()->with('error','Gagal mengupload, periksa kembali inputan!')->withErrors($validator)->withInput();
+        }
+        if($request->hasFile('file_selfie_identitas')){
+            $anggota = Anggota::findOrFail($id_anggota);
+            if(!empty($anggota)){
+                $file_upload = $request->file('file_selfie_identitas');
+                $hash_name = $file_upload->hashName();
+                $file_upload->storeAs('public/galery-file/anggota/',$hash_name);
+                $anggota->update(['file_selfie_identitas' => $hash_name]);
+                return back()->with('success','Berhasil mengupload file identitas');
+            }else{
+                return back()->with('error','Error 500, Gagal mengupload file selfie identitas!');
+            }
+        }else{
+            return back()->with('error','Error 500, Gagal mengupload file selfie identitas!');
+        }
+    }
 
+    public function destroy_file_selfie_identitas(String $id_anggota)
+    {
+        $anggota = Anggota::findOrFail($id_anggota);
+        if(!empty($anggota) && !empty(File::exists(public_path('storage/galery-file/anggota/'.$anggota->file_selfie_identitas)))){
+            unlink(public_path('storage/galery-file/anggota/'.$anggota->file_selfie_identitas));
+            $anggota->update(['file_selfie_identitas' => null]);
+            return back()->with('success','Berhasil menghapus file selfie identitas');
+        }else{
+            return back()->with('error','Terdapat kesalahan saat menghapus, silahkan coba kembali!');
+        }
+    }
+
+    public function upload_file_kartu_keluarga(Request $request, String $id_anggota)
+    {
+        $validator = Validator::make($request->all(), [
+            "file_kartu_keluarga" => ["required","file","mimes:png,jpg,jpeg,pdf","max:10240"],
+        ]);
+        if ($validator->fails()) {
+            return back()->with('error','Gagal mengupload, periksa kembali inputan!')->withErrors($validator)->withInput();
+        }
+        if($request->hasFile('file_kartu_keluarga')){
+            $anggota = Anggota::findOrFail($id_anggota);
+            if(!empty($anggota)){
+                $file_upload = $request->file('file_kartu_keluarga');
+                $hash_name = $file_upload->hashName();
+                $file_upload->storeAs('public/galery-file/anggota/',$hash_name);
+                $anggota->update(['file_kartu_keluarga' => $hash_name]);
+                return back()->with('success','Berhasil mengupload file kartu keluarga');
+            }else{
+                return back()->with('error','Error 500, Gagal mengupload file selfie kartu keluarga!');
+            }
+        }else{
+            return back()->with('error','Error 500, Gagal mengupload file selfie kartu keluarga!');
+        }
+    }
+
+    public function destroy_file_kartu_keluarga(String $id_anggota)
+    {
+        $anggota = Anggota::findOrFail($id_anggota);
+        if(!empty($anggota) && !empty(File::exists(public_path('storage/galery-file/anggota/'.$anggota->file_kartu_keluarga)))){
+            unlink(public_path('storage/galery-file/anggota/'.$anggota->file_kartu_keluarga));
+            $anggota->update(['file_kartu_keluarga' => null]);
+            return back()->with('success','Berhasil menghapus file kartu keluarga');
+        }else{
+            return back()->with('error','Terdapat kesalahan saat menghapus, silahkan coba kembali!');
+        }
+    }
 
 
 

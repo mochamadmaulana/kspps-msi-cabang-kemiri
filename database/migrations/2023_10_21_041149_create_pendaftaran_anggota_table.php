@@ -27,7 +27,6 @@ return new class extends Migration
             $table->dateTime('tanggal_diterima')->nullable();
             $table->integer('nominal_bayar_daftar')->nullable();
             $table->enum('metode_bayar_daftar',['Cash','Transfer'])->nullable();
-            $table->string('bukti_bayar_daftar')->nullable();
             $table->timestamps();
         });
     }

@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lampiran_anggota', function (Blueprint $table) {
+        Schema::create('lampiran_pendaftaran_anggota', function (Blueprint $table) {
             $table->id();
             $table->foreignId('anggota_id')->nullable();
+            $table->enum('jenis_lampiran',['Identitas','Selfie Identitas','Kartu Keluarga','Usaha','Bukti Bayar Pendaftaran']);
             $table->string('file_hash');
             $table->string('file_original');
             $table->string('file_size');
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lampiran_anggota');
+        Schema::dropIfExists('lampiran_pendaftaran_anggota');
     }
 };

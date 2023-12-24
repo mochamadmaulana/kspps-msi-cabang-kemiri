@@ -21,7 +21,7 @@
                             <div class="form-group">
                                 <label>Jenis Keanggotaan <span class="text-danger">*</span></label>
                                 <select name="jenis_keanggotaan" class="form-control @error('jenis_keanggotaan') is-invalid @enderror">
-                                    <option value="">Pilih</option>
+                                    <option value="">- pilih -</option>
                                     <option value="Majlis" @if (@old('jenis_keanggotaan') == 'Majlis') selected @endif>Majlis</option>
                                     <option value="Umum" @if (@old('jenis_keanggotaan') == 'Umum') selected @endif>Umum</option>
                                 </select>
@@ -51,7 +51,7 @@
                             <div class="form-group">
                                 <label>Jenis Identitas <span class="text-danger">*</span></label>
                                 <select name="jenis_identitas" class="form-control @error('jenis_identitas') is-invalid @enderror">
-                                    <option value="">Pilih</option>
+                                    <option value="">- pilih -</option>
                                     <option value="KTP" @if (@old('jenis_identitas') == 'KTP') selected @endif>KTP</option>
                                     <option value="SIM" @if (@old('jenis_identitas') == 'SIM') selected @endif>SIM</option>
                                 </select>
@@ -95,7 +95,7 @@
                             <div class="form-group">
                                 <label>Jenis Kelamin <span class="text-danger">*</span></label>
                                 <select name="jenis_kelamin" class="form-control @error('jenis_kelamin') is-invalid @enderror">
-                                    <option value="">Pilih</option>
+                                    <option value="">- pilih -</option>
                                     <option value="Laki-Laki" @if (@old('jenis_kelamin') == 'Laki-Laki') selected @endif>Laki-Laki</option>
                                     <option value="Perempuan" @if (@old('jenis_kelamin') == 'Perempuan') selected @endif>Perempuan</option>
                                 </select>
@@ -166,6 +166,24 @@
                                 <label>Nama Ibu Kandung <span class="text-danger">*</span></label>
                                 <input type="text" name="nama_ibu_kandung" class="form-control @error('nama_ibu_kandung') is-invalid @enderror" value="{{ @old('nama_ibu_kandung') }}" placeholder="Nama Ibu Kandung...">
                                 @error('nama_ibu_kandung')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label>Nominal Bayar Daftar <span class="text-danger">* <sup class="font-italic">Rp.50.000</sup></span></label>
+                                <input type="text" name="nominal_bayar_daftar" class="form-control @error('nominal_bayar_daftar') is-invalid @enderror" value="{{ @old('nominal_bayar_daftar') }}" placeholder="0">
+                                @error('nominal_bayar_daftar')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label>Metode Bayar Daftar <span class="text-danger">*</span></label>
+                                <select name="metode_bayar_daftar" class="form-control @error('metode_bayar_daftar') is-invalid @enderror">
+                                    <option value="">- pilih -</option>
+                                    <option value="Cash" @if (@old('metode_bayar_daftar') == 'Cash') selected @endif>Cash</option>
+                                    <option value="Transfer" @if (@old('metode_bayar_daftar') == 'Transfer') selected @endif>Transfer</option>
+                                </select>
+                                @error('metode_bayar_daftar')<div class="invalid-feedback">{{ $message }}</span></div>@enderror
                             </div>
                         </div>
                     </div>

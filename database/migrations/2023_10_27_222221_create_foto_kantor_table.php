@@ -14,9 +14,12 @@ return new class extends Migration
         Schema::create('foto_kantor', function (Blueprint $table) {
             $table->id();
             $table->foreignId('kantor_id');
-            $table->string('nama_file');
-            $table->string('ukuran_file');
-            $table->tinyInteger('urutan');
+            $table->enum('jenis',['Thumbnail','Galeri']);
+            $table->string('file_hash');
+            $table->string('file_original');
+            $table->string('file_size');
+            $table->string('file_extention',10);
+            $table->tinyInteger('posisi');
             $table->timestamps();
         });
     }
