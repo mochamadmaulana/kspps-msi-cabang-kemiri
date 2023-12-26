@@ -32,10 +32,6 @@ return new class extends Migration
             $table->string('nama_ibu_kandung');
             $table->boolean('is_ketua_majlis')->default(false);
             $table->string('nomor_kartu_keluarga');
-
-            $table->string('file_identitas')->nullable();
-            $table->string('file_selfie_identitas')->nullable();
-            $table->string('file_kartu_keluarga')->nullable();
             $table->string('ttd_anggota')->nullable();
             // $table->softDeletes();
             $table->timestamps();

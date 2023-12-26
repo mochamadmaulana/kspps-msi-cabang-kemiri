@@ -1,4 +1,4 @@
-@extends('layouts.admin', ['title' => 'Pendaftaran Anggota','icon' => 'fas fa-address-book'])
+@extends('layouts.staff_lapangan', ['title' => 'Pendaftaran Anggota','icon' => 'fas fa-address-book'])
 @section('content')
 <div class="row mb-5">
     <div class="col-12" id="accordion">

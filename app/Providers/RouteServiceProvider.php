@@ -22,7 +22,7 @@ class RouteServiceProvider extends ServiceProvider
     public const KASI_PEMBIAYAAN = '/kasi-pembiayaan/dashboard';
     public const KASI_KEUANGAN = '/kasi-keuangan/dashboard';
     public const STAFF_LAPANGAN = '/staff-lapangan/dashboard';
-    public const KEPALA_CABANG = '/kepala-cabang/dashboard';
+    public const BRACH_MANAGER = '/branch-manager/dashboard';
 
     /**
      * Define your route model bindings, pattern filters, and other route configuration.
@@ -48,6 +48,10 @@ class RouteServiceProvider extends ServiceProvider
             // Kasi Pembiayaan
             Route::middleware('web')
             ->group(base_path('routes/kasi_pembiayaan.php'));
+
+            // Staff Lapangan
+            Route::middleware('web')
+            ->group(base_path('routes/staff_lapangan.php'));
         });
     }
 }

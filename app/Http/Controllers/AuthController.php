@@ -35,8 +35,11 @@ class AuthController extends Controller
                     }elseif($karyawan->role === 'Kasi Pembiayaan') {
                         Auth::login($karyawan);
                         return redirect()->route('kasi-pembiayaan.dashboard')->with('success', 'Login berhasil, Selamat bekerja '.$karyawan->nama_lengkap);
+                    }elseif($karyawan->role === 'Staff Lapangan') {
+                        Auth::login($karyawan);
+                        return redirect()->route('staff-lapangan.dashboard')->with('success', 'Login berhasil, Selamat bekerja '.$karyawan->nama_lengkap);
                     }else{
-                        return back()->with('error', 'Login hanya dapat dilakukan oleh Admin dan Kasie Pembiayaan!');
+                        return back()->with('error', 'Fitur '.$karyawan->role.' sedang tahap development!');
                     }
                 }else{
                     return back()->with('error', 'Akun tidak aktif, harap hubungi admin!')->withErrors($validator)->withInput();

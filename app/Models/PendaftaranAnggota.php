@@ -9,8 +9,6 @@ class PendaftaranAnggota extends Model
 {
     use HasFactory;
     protected $table = "pendaftaran_anggota";
-    public $timestamps = false;
-    // protected $CREATED_AT = 'tanggal_daftar';
     protected $guarded = [];
 
     public function kantor()

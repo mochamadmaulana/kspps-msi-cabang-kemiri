@@ -1,15 +1,15 @@
 <?php
 
-use App\Http\Controllers\Admin\AnggotaController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\KantorController;
-use App\Http\Controllers\Admin\KaryawanController;
-use App\Http\Controllers\Admin\KomoditiUsahaController;
-use App\Http\Controllers\Admin\MajlisController;
+use App\Http\Controllers\StaffLapangan\AnggotaController;
+use App\Http\Controllers\StaffLapangan\DashboardController;
+use App\Http\Controllers\StaffLapangan\MajlisController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+Route::middleware('auth')->prefix('staff-lapangan')->name('staff-lapangan.')->group(function () {
     Route::get('dashboard',[DashboardController::class,'index'])->name('dashboard');
+
+    Route::get('majlis',[MajlisController::class,'index'])->name('majlis.index');
+    Route::post('majlis/pilih-ketua',[MajlisController::class,'pilih_ketua'])->name('majlis.pilih-ketua');
 
     Route::prefix('anggota')->name('anggota.')->group(function () {
         Route::get('/',[AnggotaController::class,'index'])->name('index');
@@ -49,22 +49,4 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
         Route::post('pendaftaran/{id_anggota}/store/tanda-tangan-digital',[AnggotaController::class,'store_tanda_tangan'])->name('pendaftaran-store-tanda-tangan-digital');
     });
-
-
-
-    Route::resource('karyawan',KaryawanController::class)->except('show');
-    Route::put('karyawan/{id}/edit-password',[KaryawanController::class,'edit_password'])->name('karyawan.edit-password');
-
-    Route::get('kantor',[KantorController::class,'index'])->name('kantor.index');
-    Route::get('kantor/{id}/edit',[KantorController::class,'edit'])->name('kantor.edit');
-    Route::put('kantor/{id}',[KantorController::class,'update'])->name('kantor.update');
-    Route::post('kantor/{id}/upload-foto',[KantorController::class,'upload_foto'])->name('kantor.upload-foto');
-    Route::post('kantor/{id}/edit-foto',[KantorController::class,'edit_foto'])->name('kantor.edit-foto');
-    Route::delete('kantor/{id}/delete-foto',[KantorController::class,'delete_foto'])->name('kantor.delete-foto');
-
-    Route::resource('majlis',MajlisController::class)->except('show');
-    Route::post('majlis/add-ketua',[MajlisController::class,'add_ketua'])->name('majlis.add-ketua');
-
-    Route::resource('komoditi-usaha',KomoditiUsahaController::class)->except('show');
-
 });

@@ -29,4 +29,8 @@ class JenisUsaha extends Model
     {
         return $this->hasMany(KomoditiUsaha::class);
     }
+    public function usaha_anggota()
+    {
+        return $this->hasOne(UsahaAnggota::class);
+    }
 }

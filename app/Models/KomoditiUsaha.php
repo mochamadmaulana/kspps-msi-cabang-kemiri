@@ -25,4 +25,8 @@ class KomoditiUsaha extends Model
     {
         return $this->belongsTo(JenisUsaha::class);
     }
+    public function usaha_anggota()
+    {
+        return $this->hasOne(UsahaAnggota::class);
+    }
 }

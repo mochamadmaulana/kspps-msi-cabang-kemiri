@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\StaffLapangan;
 
 use App\Http\Controllers\Controller;
 use App\Models\AlamatAnggota;
@@ -26,7 +26,7 @@ class AnggotaController extends Controller
         $anggota = Anggota::with('majlis','pendaftaran_anggota','pendaftaran_anggota.penginput')->where('kantor_id',Auth::user()->kantor_id)->orderBy('id','DESC')->paginate(10)->onEachSide(0)->withQueryString();
         $majlis = Majlis::orderBy('nama')->get();
         $pendaftaran = PendaftaranAnggota::whereIsSubmit(false)->whereKantorId(Auth::user()->kantor_id)->first();
-        return view('admin.anggota.index', [
+        return view('staff-lapangan.anggota.index', [
             'anggota' => $anggota,
             'majlis' => $majlis,
             'pendaftaran' => $pendaftaran
@@ -41,7 +41,7 @@ class AnggotaController extends Controller
             'penginput_id' => Auth::user()->id,
             'kantor_id' => Auth::user()->kantor_id,
         ]);
-        return redirect()->route('admin.anggota.index-pendaftaran',$pendaftaran->nomor_daftar)->with('success','Berhasil membuat nomor pendaftaran');
+        return redirect()->route('staff-lapangan.anggota.index-pendaftaran',$pendaftaran->nomor_daftar)->with('success','Berhasil membuat nomor pendaftaran');
     }
 
     public function index_pendaftaran(String $nomor_daftar)
@@ -54,7 +54,7 @@ class AnggotaController extends Controller
         $lampiran_kartu_keluarga = !empty($anggota) ? LampiranPendaftaranAnggota::whereAnggotaId($anggota->id)->whereJenisLampiran('Kartu Keluarga')->first() : null;
         $foto_usaha = !empty($anggota) ? LampiranPendaftaranAnggota::whereAnggotaId($anggota->id)->whereJenisLampiran('Usaha')->first() : null;
         $foto_bukti_bayar_daftar = !empty($anggota) ? LampiranPendaftaranAnggota::whereAnggotaId($anggota->id)->whereJenisLampiran('Bukti Bayar Pendaftaran')->first() : null;
-        return view('admin.anggota.pendaftaran.index',[
+        return view('staff-lapangan.anggota.pendaftaran.index',[
             'pendaftaran' => $pendaftaran,
             'anggota' => $anggota,
             'alamat_identitas' => $alamat_identitas,
@@ -71,7 +71,7 @@ class AnggotaController extends Controller
         $majlis = Majlis::orderBy('kode')->get();
         $tempat_lahir = Kota::get();
         $jenis_usaha = JenisUsaha::all();
-        return view('admin.anggota.pendaftaran.tahap-1.input',[
+        return view('staff-lapangan.anggota.pendaftaran.tahap-1.input',[
             'nomor_daftar' => $nomor_daftar,
             'majlis' => $majlis,
             'tempat_lahir' => $tempat_lahir,
@@ -140,7 +140,7 @@ class AnggotaController extends Controller
                 'metode_bayar_daftar' => $request->metode_bayar_daftar,
             ]);
             DB::commit();
-            return redirect()->route('admin.anggota.index-pendaftaran',$nomor_daftar)->with('success','Berhasil menyimpan tahap 1');
+            return redirect()->route('staff-lapangan.anggota.index-pendaftaran',$nomor_daftar)->with('success','Berhasil menyimpan tahap 1');
         } catch (\Throwable $th) {
             DB::rollBack();
             return back()->with("error", "Gagal menyimpan, periksa kembali inputan!");
@@ -154,7 +154,7 @@ class AnggotaController extends Controller
         $pendaftaran = PendaftaranAnggota::whereNomorDaftar($nomor_daftar)->wherePenginputId(Auth::user()->id)->whereIsSubmit(false)->first();
         $anggota = Anggota::with('pendaftaran_anggota','usaha_anggota')->wherePendaftaranAnggotaId($pendaftaran->id)->whereKantorId(Auth::user()->kantor_id)->first();
         $jenis_usaha = JenisUsaha::all();
-        return view('admin.anggota.pendaftaran.tahap-1.edit',[
+        return view('staff-lapangan.anggota.pendaftaran.tahap-1.edit',[
             'pendaftaran' => $pendaftaran,
             'majlis' => $majlis,
             'tempat_lahir' => $tempat_lahir,
@@ -209,7 +209,7 @@ class AnggotaController extends Controller
             'nominal_bayar_daftar' => $request->nominal_bayar_daftar,
             'metode_bayar_daftar' => $request->metode_bayar_daftar,
         ]);
-        return redirect()->route('admin.anggota.index-pendaftaran',$nomor_daftar)->with('success','Berhasil mengupdate tahap 1');
+        return redirect()->route('staff-lapangan.anggota.index-pendaftaran',$nomor_daftar)->with('success','Berhasil mengupdate tahap 1');
     }
 
     public function update_pendaftaran_usaha_anggota(Request $request, String $id_usaha_anggota)
@@ -233,7 +233,7 @@ class AnggotaController extends Controller
     public function input_pendaftaran_tahap_dua(String $nomor_daftar)
     {
         $provinsi = Provinsi::orderBy('nama_provinsi')->get();
-        return view('admin.anggota.pendaftaran.tahap-2.input',[
+        return view('staff-lapangan.anggota.pendaftaran.tahap-2.input',[
             'nomor_daftar' => $nomor_daftar,
             'provinsi' => $provinsi,
         ]);
@@ -266,7 +266,7 @@ class AnggotaController extends Controller
             'alamat' => $request->alamat,
         ]);
         $pendaftaran->update(['tahap_dua'=>true]);
-        return redirect()->route('admin.anggota.index-pendaftaran',$nomor_daftar)->with('success','Berhasil menyimpan tahap 2');
+        return redirect()->route('staff-lapangan.anggota.index-pendaftaran',$nomor_daftar)->with('success','Berhasil menyimpan tahap 2');
     }
 
     public function edit_pendaftaran_tahap_dua(String $nomor_daftar)
@@ -275,7 +275,7 @@ class AnggotaController extends Controller
         $pendaftaran = PendaftaranAnggota::whereNomorDaftar($nomor_daftar)->wherePenginputId(Auth::user()->id)->whereIsSubmit(false)->first();
         $anggota = Anggota::wherePendaftaranAnggotaId($pendaftaran->id)->whereKantorId(Auth::user()->kantor_id)->first();
         $alamat_identitas = AlamatAnggota::with('provinsi','kota','kecamatan','kelurahan')->whereAnggotaId($anggota->id)->first();
-        return view('admin.anggota.pendaftaran.tahap-2.edit',[
+        return view('staff-lapangan.anggota.pendaftaran.tahap-2.edit',[
             'provinsi' => $provinsi,
             'nomor_daftar' => $nomor_daftar,
             'alamat_identitas' => $alamat_identitas,
@@ -297,7 +297,7 @@ class AnggotaController extends Controller
             'rt_rw' => $request->rt_rw,
             'alamat' => $request->alamat,
         ]);
-        return redirect()->route('admin.anggota.index-pendaftaran',$nomor_daftar)->with('success','Berhasil mengupdate tahap 2');
+        return redirect()->route('staff-lapangan.anggota.index-pendaftaran',$nomor_daftar)->with('success','Berhasil mengupdate tahap 2');
     }
 
     public function update_pendaftaran_alamat_identitas(Request $request, String $id_alamat)
@@ -552,7 +552,7 @@ class AnggotaController extends Controller
 
     public function create_3(string $no_pendaftaran)
     {
-        return view('admin.anggota.tambah-3',compact('no_pendaftaran'));
+        return view('staff-lapangan.anggota.tambah-3',compact('no_pendaftaran'));
     }
 
     public function store_3(Request $request ,string $no_pendaftaran)
@@ -585,7 +585,7 @@ class AnggotaController extends Controller
             if($request->upload == 'selfie_identitas'){
                 $anggota->update(['foto_selfie_identitas' => $has_name]);
             }
-            return redirect()->route('admin.anggota.create-4',$no_pendaftaran)->with('success','Berhasil menyimpan data tahap 3, silahkan lanjutkan tahap 4');
+            return redirect()->route('staff-lapangan.anggota.create-4',$no_pendaftaran)->with('success','Berhasil menyimpan data tahap 3, silahkan lanjutkan tahap 4');
         }else{
             return back()->with('error','Gagal menyimpan tahap 3!');
         }
@@ -593,7 +593,7 @@ class AnggotaController extends Controller
 
     public function create_tahap_4(string $no_pendaftaran)
     {
-        return view('admin.anggota.tambah-tahap-4',compact('no_pendaftaran'));
+        return view('staff-lapangan.anggota.tambah-tahap-4',compact('no_pendaftaran'));
     }
 
     public function store_tahap_4(Request $request ,string $no_pendaftaran)
@@ -615,7 +615,7 @@ class AnggotaController extends Controller
         $anggota = Anggota::where('pendaftaran_anggota_id',$rc_pendaftaran_anggota->id)->first();
         $anggota->update(['tanda_tangan_digital'=>$name_file]);
         $rc_pendaftaran_anggota->update(['tahap_4'=>true]);
-        return redirect()->route('admin.anggota.index')->with('success','Berhasil menambahkan anggota baru');
+        return redirect()->route('staff-lapangan.anggota.index')->with('success','Berhasil menambahkan anggota baru');
     }
 
     public function show(string $id)

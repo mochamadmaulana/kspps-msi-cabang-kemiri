@@ -170,6 +170,31 @@
                         </div>
                         <div class="col-lg-4">
                             <div class="form-group">
+                                <label>Jenis Usaha <span class="text-danger">*</span></label>
+                                <select name="jenis_usaha" class="form-control @error('jenis_usaha') is-invalid @enderror" id="selectJenisUsaha">
+                                    <option value="">- pilih -</option>
+                                    @foreach ($jenis_usaha as $val_ju)
+                                    <option value="{{ $val_ju->id }}" @if (@old('jenis_usaha') == $val_ju->id) selected @endif>{{ $val_ju->kode }} | {{ $val_ju->nama }}</option>
+                                    @endforeach
+                                </select>
+                                @error('jenis_usaha')<div class="invalid-feedback">{{ $message }}</span></div>@enderror
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label>Komoditi Usaha <span class="text-danger">*</span></label>
+                                <select name="komoditi_usaha" class="form-control @error('komoditi_usaha') is-invalid @enderror" id="selectKomoditi" disabled></select>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label>Deskripsi Usaha</label>
+                                <input type="text" name="deskripsi_usaha" class="form-control @error('deskripsi_usaha') is-invalid @enderror" value="{{ @old('deskripsi_usaha') }}" placeholder="Deskripsi Usaha...">
+                                @error('deskripsi_usaha')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
                                 <label>Nominal Bayar Daftar <span class="text-danger">* <sup class="font-italic">Rp.50.000</sup></span></label>
                                 <input type="text" name="nominal_bayar_daftar" class="form-control @error('nominal_bayar_daftar') is-invalid @enderror" value="{{ @old('nominal_bayar_daftar') }}" placeholder="0">
                                 @error('nominal_bayar_daftar')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -201,6 +226,7 @@
 <li class="breadcrumb-item"><a href="{{ route('admin.anggota.index-pendaftaran',$nomor_daftar) }}">Tahap Pendaftaran</a></li>
 <li class="breadcrumb-item active">No.{{ $nomor_daftar }}</li>
 @endpush
+
 @push('js')
 <script>
     $('#selectTempatLahir').select2({
@@ -215,104 +241,10 @@
         theme: 'bootstrap4',
         // placeholder: '-Pilih-'
     })
-    $('#selectProvinsi').select2({
-        theme: 'bootstrap4',
-        // placeholder: '-Pilih-'
-    })
-    $('#selectKotaKab').select2({
-        theme: 'bootstrap4',
-        // placeholder: '-Pilih-'
-    })
-    $('#selectKecamatan').select2({
-        theme: 'bootstrap4',
-        // placeholder: '-Pilih-'
-    })
-    $('#selectKelurahan').select2({
-        theme: 'bootstrap4',
-        // placeholder: '-Pilih-'
-    })
     $('#selectKomoditi').select2({
         theme: 'bootstrap4',
         // placeholder: '-Pilih-'
     })
-    $('#selectProvinsi').on('change', function() {
-        var provID = $(this).val();
-        if(provID) {
-            $.ajax({
-                url: '/get-kota-kabupaten/'+provID,
-                type: "GET",
-                data : {"_token":"{{ csrf_token() }}"},
-                dataType: "json",
-                success:function(data){
-                    if(data){
-                        $('#selectKotaKab').empty();
-                        $('#selectKotaKab').removeAttr("disabled");
-                        $('#selectKotaKab').append('<option value="">- Pilih -</option>');
-                        $.each(data, function(key, kotaKab){
-                            $('select[name="kota_kabupaten"]').append('<option value="'+ kotaKab.id +'">' + kotaKab.nama_kota+ '</option>');
-                        });
-                    }else{
-                        $('#selectKotaKab').empty();
-                    }
-                }
-            });
-        }else{
-            $('#selectKotaKab').empty();
-            $('#selectKotaKab').setAttr("disabled");
-        }
-    });
-    $('#selectKotaKab').on('change', function() {
-        var kotaKabID = $(this).val();
-        if(kotaKabID) {
-            $.ajax({
-                url: '/get-kecamatan/'+kotaKabID,
-                type: "GET",
-                data : {"_token":"{{ csrf_token() }}"},
-                dataType: "json",
-                success:function(data){
-                    if(data){
-                        $('#selectKecamatan').empty();
-                        $('#selectKecamatan').append('<option value="">- Pilih -</option>');
-                        $('#selectKecamatan').removeAttr("disabled");
-                        $.each(data, function(key, KecKab){
-                            $('select[name="kecamatan"]').append('<option value="'+ KecKab.id +'">' + KecKab.nama_kecamatan+ '</option>');
-                        });
-                    }else{
-                        $('#selectKecamatan').empty();
-                    }
-                }
-            });
-        }else{
-            $('#selectKecamatan').empty();
-            $('#selectKecamatan').setAttr("disabled");
-        }
-    });
-    $('#selectKecamatan').on('change', function() {
-        var kecID = $(this).val();
-        if(kecID) {
-            $.ajax({
-                url: '/get-kelurahan/'+kecID,
-                type: "GET",
-                data : {"_token":"{{ csrf_token() }}"},
-                dataType: "json",
-                success:function(data){
-                    if(data){
-                        $('#selectKelurahan').empty();
-                        $('#selectKelurahan').append('<option value="">- Pilih -</option>');
-                        $('#selectKelurahan').removeAttr("disabled");
-                        $.each(data, function(key, KelKab){
-                            $('select[name="kelurahan"]').append('<option value="'+ KelKab.id +'">' + KelKab.nama_kelurahan+ '</option>');
-                        });
-                    }else{
-                        $('#selectKelurahan').empty();
-                    }
-                }
-            });
-        }else{
-            $('#selectKelurahan').empty();
-            $('#selectKelurahan').setAttr("disabled");
-        }
-    });
     $('#selectJenisUsaha').on('change', function() {
         var jenisUsahaID = $(this).val();
         if(jenisUsahaID) {

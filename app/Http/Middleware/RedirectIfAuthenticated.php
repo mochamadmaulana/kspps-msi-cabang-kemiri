@@ -30,7 +30,7 @@ class RedirectIfAuthenticated
                 }elseif (Auth::user()->role == 'Staff Lapangan') {
                     return redirect(RouteServiceProvider::STAFF_LAPANGAN);
                 }else{
-                    return redirect(RouteServiceProvider::KEPALA_CABANG);
+                    return redirect(RouteServiceProvider::BRACH_MANAGER);
                 }
             }
         }
